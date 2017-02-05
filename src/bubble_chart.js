@@ -8,7 +8,7 @@
  */
 function bubbleChart() {
   // Constants for sizing
-  var width = 940;
+  var width = 900;
   var height = 600;
 
   // tooltip for mouseover functionality
@@ -18,17 +18,31 @@ function bubbleChart() {
   // on which view mode is selected.
   var center = { x: width / 2, y: height / 2 };
 
+  // var yearCenters = {
+  //   2008: { x: width / 3, y: height / 2 },
+  //   2009: { x: width / 2, y: height / 2 },
+  //   2010: { x: 2 * width / 3, y: height / 2 }
+  // };
+
   var yearCenters = {
-    2008: { x: width / 3, y: height / 2 },
-    2009: { x: width / 2, y: height / 2 },
-    2010: { x: 2 * width / 3, y: height / 2 }
+    2012: { x: 14 * width / 60, y: height / 2 },
+    2013: { x: 22 * width / 60, y: height / 2 },
+    2014: { x: 30 * width / 60, y: height / 2 },
+    2015: { x: 39 * width / 60, y: height / 2 },
+    2016: { x: 47 * width / 60, y: height / 2 }
   };
 
   // X locations of the year titles.
+  var begin = 130;
+  var end = width - begin;
+  var middle = width / 2;
+
   var yearsTitleX = {
-    2008: 160,
-    2009: width / 2,
-    2010: width - 160
+    2012: begin,
+    2013: (begin + middle) / 2,
+    2014: middle,
+    2015: (end + middle) / 2,
+    2016: end
   };
 
   // @v4 strength to apply to the position forces
@@ -91,15 +105,14 @@ function bubbleChart() {
    * array for each element in the rawData input.
    */
   function createNodes(rawData) {
-    // Use the max total_amount in the data as the max in the scale's domain
-    // note we have to ensure the total_amount is a number.
-    var maxAmount = d3.max(rawData, function (d) { return +d.total_amount; });
+
+    var maxAmount = d3.max(rawData, function (d) { return +d.budget; });
 
     // Sizes bubbles based on area.
     // @v4: new flattened scale names.
     var radiusScale = d3.scalePow()
       .exponent(0.5)
-      .range([2, 85])
+      .range([2, 50])
       .domain([0, maxAmount]);
 
     // Use map() to convert raw data into node data.
@@ -108,12 +121,12 @@ function bubbleChart() {
     var myNodes = rawData.map(function (d) {
       return {
         id: d.id,
-        radius: radiusScale(+d.total_amount),
-        value: +d.total_amount,
-        name: d.grant_title,
-        org: d.organization,
-        group: d.group,
-        year: d.start_year,
+        radius: radiusScale(+d.budget),
+        value: +d.budget,
+        name: d.priorityGe.replace(/#COMMA/g, ','),
+        org: "DeleteThis",
+        group: "DeleteThisGroup",
+        year: d.year.trim(),
         x: Math.random() * 900,
         y: Math.random() * 800
       };
@@ -139,6 +152,7 @@ function bubbleChart() {
    * a d3 loading function like d3.csv.
    */
   var chart = function chart(selector, rawData) {
+    debugger;
     // convert raw data into nodes data
     nodes = createNodes(rawData);
 
@@ -158,6 +172,7 @@ function bubbleChart() {
     // Initially, their radius (r attribute) will be 0.
     // @v4 Selections are immutable, so lets capture the
     //  enter selection to apply our transtition to below.
+
     var bubblesE = bubbles.enter().append('circle')
       .classed('bubble', true)
       .attr('r', 0)
@@ -273,15 +288,15 @@ function bubbleChart() {
     // change outline to indicate hover state.
     d3.select(this).attr('stroke', 'black');
 
-    var content = '<span class="name">Title: </span><span class="value">' +
-                  d.name +
-                  '</span><br/>' +
-                  '<span class="name">Amount: </span><span class="value">$' +
-                  addCommas(d.value) +
-                  '</span><br/>' +
-                  '<span class="name">Year: </span><span class="value">' +
-                  d.year +
-                  '</span>';
+    var content = '<span class="name">პრიორიტეტი: </span><span class="value">' +
+      d.name +
+      '</span><br/>' +
+      '<span class="name">ბიუჯეტი: </span><span class="value"> ₾ ' +
+      addCommas(d.value) +
+      '</span><br/>' +
+      '<span class="name">წელი: </span><span class="value">' +
+      d.year +
+      '</span>';
 
     tooltip.showTooltip(content, d3.event);
   }
@@ -378,7 +393,7 @@ function addCommas(nStr) {
 }
 
 // Load the data.
-d3.csv('data/gates_money.csv', display);
+d3.csv('data/budget.csv', display);
 
 // setup the buttons.
 setupButtons();
