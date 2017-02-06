@@ -9,7 +9,7 @@
 function bubbleChart() {
   // Constants for sizing
   var width = 900;
-  var height = 600;
+  var height = 700;
 
   // tooltip for mouseover functionality
   var tooltip = floatingTooltip('gates_tooltip', 240);
@@ -24,6 +24,22 @@ function bubbleChart() {
   //   2010: { x: 2 * width / 3, y: height / 2 }
   // };
 
+  var titleIndexBindings = {
+    "1": { nameEn: "Institutional Development And Legal Support of Country's Interest", nameGe: "ინსტიტუციური განვითარება და ქვეყნის ინტერესების სამართლებრივი მხარდაჭერა" },
+    "2": { nameEn: "Agriculture", nameGe: " სოფლის მეურნეობა" },
+    "3": { nameEn: " State Support And Reintegration Of Internally Displaced Persons and Migrants", nameGe: "  იძულებით გადაადგილებულ პირთა და მიგრანტთა სახელმწიფო მხარდაჭერა და რეინტეგრაციის ხელშეწყობა" },
+    "4": { nameEn: "Regional Development, Infrastructure and Tourism ", nameGe: " რეგიონალური განვითარება, ინფრასტრუქტურა და ტურიზმი" },
+    "5": { nameEn: "Judicial System ", nameGe: " სასამართლო სისტემა" },
+    "6": { nameEn: "Affordable, Qualitative Health Care And Social Security", nameGe: "  ხელმისაწვდომი, ხარისხიანი ჯანმრთელობის დაცვა და სოციალური უზრუნველყოფა" },
+    "7": { nameEn: "Education, Science And Professional Training", nameGe: "  განათლება, მეცნიერება და პროფესიული მომზადება" },
+    "8": { nameEn: "Culture, Religion, Youth and Sport", nameGe: "  კულტურა, რელიგია, ახალგაზრდობის ხელშეწყობა და სპორტი" },
+    "9": { nameEn: "Environmental Protection and Natural Resources Management", nameGe: "  გარემოს დაცვა და ბუნებრივი რესურსების მართვა" },
+    "10": { nameEn: "Defence, Public Order and Security ", nameGe: " თავდაცვა, საზოგადოებრივი წესრიგი და უსაფრთხოება" },
+    "11": { nameEn: "Macroeconomic Stability And The Business Environment Improvement", nameGe: "  მაკროეკონომიკური სტაბილურობა და საინვესტიციო გარემოს გაუმჯობესება" },
+    "12": { nameEn: "International Relations and Euro-Atlantic Integration", nameGe: "  საერთაშორისო ურთიერთობები და ევროატლანტიკურ სივრცეში ინტეგრაცია" }
+  }
+
+
   var yearCenters = {
     2012: { x: 14 * width / 60, y: height / 2 },
     2013: { x: 22 * width / 60, y: height / 2 },
@@ -31,6 +47,21 @@ function bubbleChart() {
     2015: { x: 39 * width / 60, y: height / 2 },
     2016: { x: 47 * width / 60, y: height / 2 }
   };
+
+  titleCenters = {
+    1: { x: 12 * width / 60, y: 15 * height / 60 },
+    2: { x: 12 * width / 60, y: 30 * height / 60 },
+    3: { x: 12 * width / 60, y: 47 * height / 60 },
+    4: { x: 25 * width / 60, y: 15 * height / 60 },
+    5: { x: 25 * width / 60, y: 30 * height / 60 },
+    6: { x: 25 * width / 60, y: 47 * height / 60 },
+    7: { x: 37 * width / 60, y: 15 * height / 60 },
+    8: { x: 37 * width / 60, y: 30 * height / 60 },
+    9: { x: 35 * width / 60, y: 47 * height / 60 },
+    10: { x: 49 * width / 60, y: 15 * height / 60 },
+    11: { x: 49 * width / 60, y: 30 * height / 60 },
+    12: { x: 49 * width / 60, y: 47 * height / 60 },
+  }
 
   // X locations of the year titles.
   var begin = 130;
@@ -44,6 +75,42 @@ function bubbleChart() {
     2015: (end + middle) / 2,
     2016: end
   };
+
+  var beginX = 120;
+  var endX = width - beginX;
+  var diff = (endX - beginX) / 3;
+
+  var prX = [
+    beginX,
+    beginX + diff,
+    endX - diff,
+    endX
+  ]
+
+  var beginY = 40;
+  var endY = height - beginY - 180;
+  var diffY = (endY - beginY) / 2;
+
+  var prY = [
+    beginY,
+    beginY + diffY,
+    endY
+  ]
+
+  var priorityTitle = {};
+
+  for (var i = 0; i < prX.length; i++) {
+    for (var j = 0; j < prY.length; j++) {
+      var index = i * 3 + (j + 1);
+      priorityTitle[index] = {
+        x: prX[i],
+        y: prY[j] + (j == 2 ? -30 : 0)
+      }
+    }
+  }
+
+
+
 
   // @v4 strength to apply to the position forces
   var forceStrength = 0.03;
@@ -121,6 +188,7 @@ function bubbleChart() {
     var myNodes = rawData.map(function (d) {
       return {
         id: d.id,
+        priorityIndex: d.index.trim(),
         radius: radiusScale(+d.budget),
         value: +d.budget,
         name: d.priorityGe.replace(/#COMMA/g, ','),
@@ -152,7 +220,7 @@ function bubbleChart() {
    * a d3 loading function like d3.csv.
    */
   var chart = function chart(selector, rawData) {
-    debugger;
+
     // convert raw data into nodes data
     nodes = createNodes(rawData);
 
@@ -176,8 +244,8 @@ function bubbleChart() {
     var bubblesE = bubbles.enter().append('circle')
       .classed('bubble', true)
       .attr('r', 0)
-      .attr('fill', function (d) { return fillColor(d.group); })
-      .attr('stroke', function (d) { return d3.rgb(fillColor(d.group)).darker(); })
+      .attr('fill', function (d) { return "#ECF5F1" })
+      .attr('stroke', function (d) { return "#B1AE86"; })
       .attr('stroke-width', 2)
       .on('mouseover', showDetail)
       .on('mouseout', hideDetail);
@@ -220,7 +288,9 @@ function bubbleChart() {
     return yearCenters[d.year].x;
   }
 
-
+  function nodeTitlePos(d) {
+    return titleCenters[d.priorityIndex];
+  }
   /*
    * Sets visualization in "single group mode".
    * The year labels are hidden and the force layout
@@ -229,10 +299,12 @@ function bubbleChart() {
    */
   function groupBubbles() {
     hideYearTitles();
+    hidePriorityTytles();
+
 
     // @v4 Reset the 'x' force to draw the bubbles to the center.
     simulation.force('x', d3.forceX().strength(forceStrength).x(center.x));
-
+    simulation.force('y', d3.forceY().strength(forceStrength).y(height / 2));
     // @v4 We can reset the alpha value and restart the simulation
     simulation.alpha(1).restart();
   }
@@ -246,13 +318,38 @@ function bubbleChart() {
    */
   function splitBubbles() {
     showYearTitles();
+    hidePriorityTytles()
 
     // @v4 Reset the 'x' force to draw the bubbles to their year centers
     simulation.force('x', d3.forceX().strength(forceStrength).x(nodeYearPos));
+    simulation.force('y', d3.forceY().strength(forceStrength).y(height / 2));
+    // @v4 We can reset the alpha value and restart the simulation
+    simulation.alpha(1).restart();
+  }
+
+
+
+  function splitByPriority() {
+    showPriorityTitles();
+    hideYearTitles();
+
+    // @v4 Reset the 'x' force to draw the bubbles to their year centers
+    simulation.force('x', d3.forceX().strength(forceStrength)
+      .x(function (d) {
+        return nodeTitlePos(d).x;
+      }))
+
+
+    simulation.force('y', d3.forceY().strength(forceStrength)
+      .y(function (d) {
+        return nodeTitlePos(d).y;
+      }));
+
 
     // @v4 We can reset the alpha value and restart the simulation
     simulation.alpha(1).restart();
   }
+
 
   /*
    * Hides Year title displays.
@@ -260,10 +357,68 @@ function bubbleChart() {
   function hideYearTitles() {
     svg.selectAll('.year').remove();
   }
+  function hidePriorityTytles() {
+    svg.selectAll('.priority').remove();
+  }
 
-  /*
-   * Shows Year title displays.
-   */
+
+
+  function wrap(text, width) {
+    text.each(function () {
+      var text = d3.select(this),
+        words = text.text().trim().split(/\s+/).reverse(),
+
+        word,
+        line = [],
+        lineNumber = 0,
+        lineHeight = 1, // ems
+        y = text.attr("y"),
+        dy = parseFloat(text.attr("dy")),
+        tspan = text.text(null).append("tspan").attr("x", 0).attr("y", y).attr("dy", dy + "em");
+      words = words.filter(function (w) { return w });
+      while (word = words.pop()) {
+        line.push(word);
+        tspan.text(line.join(" "));
+        if (tspan.node().getComputedTextLength() > width) {
+          line.pop();
+          tspan.text(line.join(" "));
+          line = [word];
+          debugger;
+          if (word.trim()) {
+            tspan = text.append("tspan").attr("x", 0).attr("y", y).attr("dy", (lineNumber + 1) * lineHeight + "em").text(word);
+          }
+
+        }
+      }
+    });
+  }
+
+  function showPriorityTitles() {
+
+    var priorityData = d3.keys(priorityTitle)
+
+
+    var priorities = svg.selectAll('.priority')
+      .data(priorityData);
+
+    priorities.enter()
+      .append('g')
+      .attr('transform', function (d) {
+        var x = priorityTitle[d].x;
+        var y = priorityTitle[d].y;
+        return "translate(" + x + "," + y + ")"
+      })
+      .append('text')
+      .attr('class', 'priority')
+
+      .attr('text-anchor', 'middle')
+      .attr("dy", "0em")
+      .attr("dx", "0.35em")
+      .attr("color", "black")
+      .text(function (d) { return titleIndexBindings[d].nameGe; })
+      .call(wrap, 200);
+  }
+
   function showYearTitles() {
     // Another way to do this would be to create
     // the year texts once and then just hide them.
@@ -286,7 +441,7 @@ function bubbleChart() {
    */
   function showDetail(d) {
     // change outline to indicate hover state.
-    d3.select(this).attr('stroke', 'black');
+    d3.select(this).attr('stroke', '#5C5245');
 
     var content = '<span class="name">პრიორიტეტი: </span><span class="value">' +
       d.name +
@@ -307,7 +462,7 @@ function bubbleChart() {
   function hideDetail(d) {
     // reset outline
     d3.select(this)
-      .attr('stroke', d3.rgb(fillColor(d.group)).darker());
+      .attr('stroke', "#B1AE86");
 
     tooltip.hideTooltip();
   }
@@ -322,6 +477,8 @@ function bubbleChart() {
   chart.toggleDisplay = function (displayName) {
     if (displayName === 'year') {
       splitBubbles();
+    } else if (displayName === 'priority') {
+      splitByPriority();
     } else {
       groupBubbles();
     }
