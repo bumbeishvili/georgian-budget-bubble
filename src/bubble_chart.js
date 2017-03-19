@@ -6,6 +6,15 @@
  * https://bost.ocks.org/mike/chart/
  *
  */
+
+var currLang = localStoraget.getItem('lang');
+
+if (!currLang) {
+  currLang = 'En';
+  localStoraget.setItem('lang', currLang);
+}
+
+
 function bubbleChart() {
   // Constants for sizing
   var width = 900;
